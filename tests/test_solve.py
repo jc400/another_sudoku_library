@@ -1,5 +1,5 @@
 import pytest
-from another_sudoku_library.solve import _getRowVals, _getColVals, _getSqrVals, solve
+from another_sudoku_library.solve import _getRowVals, _getColVals, _getSqrVals, solve, check
 from . import sample_boards
 
 
@@ -22,5 +22,20 @@ def test_getSqrVals():
         {"problem": sample_boards.t3_problem, "solution": sample_boards.t3_solution},
     ),
 )
-def test_solve_t2(pz):
+def test_solve(pz):
     assert solve(pz["problem"]) == pz["solution"]
+
+
+@pytest.mark.parametrize("solution", (
+    sample_boards.t2_solution,
+    sample_boards.t3_solution,
+)
+)
+def test_check(solution):
+    assert check(solution) == True
+
+    solution[0][0] = (solution[0][0] % 9) + 1   # make a cell incorrect
+    assert check(solution) == False
+
+    solution[0][0] = 0                          # make a cell empty
+    assert check(solution) == False
