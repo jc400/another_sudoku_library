@@ -26,7 +26,9 @@ Library for generating and solving Sudoku puzzles.
 Features
 --------
 
-* TODO
+* Generate new, random puzzles
+* Solve puzzles 
+* Check correctness of puzzles
 
 Credits
 -------
