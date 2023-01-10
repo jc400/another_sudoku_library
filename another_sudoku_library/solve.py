@@ -2,7 +2,7 @@ from .utils import rowGen, colGen, sqrGen, fullGen, getEmptyBoard, copyBoard
 
 
 # Return list of KNOWN values within a row/sqr/col.         
-def getRowVals(board, y, x, inclusive=True):
+def _getRowVals(board, y, x, inclusive=True):
     """Returns list of values of already set cells in row"""
     out = []
     for y1, x1 in rowGen(y, x, inclusive=inclusive):
@@ -14,7 +14,7 @@ def getRowVals(board, y, x, inclusive=True):
             out += board[y1][x1]
     return out   
     
-def getColVals(board, y, x, inclusive=True):
+def _getColVals(board, y, x, inclusive=True):
     """Returns list of values of already set cells in col"""
     out = []
     for y1, x1 in colGen(y, x, inclusive=inclusive):
@@ -26,7 +26,7 @@ def getColVals(board, y, x, inclusive=True):
             out += board[y1][x1]
     return out
 
-def getSqrVals(board, y, x, inclusive=True):
+def _getSqrVals(board, y, x, inclusive=True):
     """Returns list of values of already set cells in sqr"""
     out = []
     for y1, x1 in sqrGen(y, x, inclusive=inclusive):
@@ -38,17 +38,17 @@ def getSqrVals(board, y, x, inclusive=True):
             out += board[y1][x1]
     return out
 
-def getPoss(board, y, x):
+def _getPoss(board, y, x):
     """Returns set of possible values for a cell. Returns single-value set if cell is decided."""
     if board[y][x] != 0:
         return [board[y][x]]
 
     return ({1,2,3,4,5,6,7,8,9}
-            -set(getRowVals(board, y, x))
-            -set(getColVals(board, y, x))
-            -set(getSqrVals(board, y, x)))
+            -set(_getRowVals(board, y, x))
+            -set(_getColVals(board, y, x))
+            -set(_getSqrVals(board, y, x)))
 
-def countZeros(board):
+def _countZeros(board):
     """Returns count of zeros (eg carved cells) in a provided board. 
     
     Should work on stringify() board, and also full list board"""
@@ -64,14 +64,14 @@ def countZeros(board):
 
 
 
-def generateCache(board):
+def _generateCache(board):
     """returns parallel cache board, holding set of possibilities for each cell"""
     out = getEmptyBoard()
     for y, x in fullGen():
-        out[y][x] = getPoss(board, y, x)
+        out[y][x] = _getPoss(board, y, x)
     return out
     
-def uniqueCheck(board, y, x, cache=None):
+def _uniqueCheck(board, y, x, cache=None):
     """Tries to solve cell. Return 1-9 if found, 0 if inconclusive, -1 if no possibilities. 
     
         Looks like this is 16x faster w cache provided. Also if we calc cache here, we're doing a lot of
@@ -82,7 +82,7 @@ def uniqueCheck(board, y, x, cache=None):
     """
     
     #run cheap, naive checks first
-    cellPoss = getPoss(board, y, x)
+    cellPoss = _getPoss(board, y, x)
     if len(cellPoss) == 1:      #if cell has one poss, must be answer
         return cellPoss.pop()
     elif len(cellPoss) == 0:    #if no poss for cell, must be error in board
@@ -90,15 +90,15 @@ def uniqueCheck(board, y, x, cache=None):
 
     #if no cache, we do have to generate one
     if cache == None:
-        cache = generateCache(board)
+        cache = _generateCache(board)
 
     #compare cell possibilities to unit possibilities. Looking for UNIQUE poss in cell
-    if cellPoss - set(getRowVals(cache, y, x, inclusive=False)):
-        return (cellPoss - set(getRowVals(cache, y, x, inclusive=False))).pop()
-    if cellPoss - set(getColVals(cache, y, x, inclusive=False)):
-        return (cellPoss - set(getColVals(cache, y, x, inclusive=False))).pop()
-    if cellPoss - set(getSqrVals(cache, y, x, inclusive=False)):
-        return (cellPoss - set(getSqrVals(cache, y, x, inclusive=False))).pop()
+    if cellPoss - set(_getRowVals(cache, y, x, inclusive=False)):
+        return (cellPoss - set(_getRowVals(cache, y, x, inclusive=False))).pop()
+    if cellPoss - set(_getColVals(cache, y, x, inclusive=False)):
+        return (cellPoss - set(_getColVals(cache, y, x, inclusive=False))).pop()
+    if cellPoss - set(_getSqrVals(cache, y, x, inclusive=False)):
+        return (cellPoss - set(_getSqrVals(cache, y, x, inclusive=False))).pop()
     
     #if inconclusive, just return nothing
     return 0
@@ -108,7 +108,7 @@ def solve(board, nest=0):
         board. If error, should have that cell as -1. 
     """
     wb = copyBoard(board)   #pure function--dont change original board arg
-    c = generateCache(wb)
+    c = _generateCache(wb)
     solved = False
     changed = True
 
@@ -116,9 +116,9 @@ def solve(board, nest=0):
         changed = False
         for y, x in fullGen():              # use uniqueCheck() against whole board
             if wb[y][x] == 0:               # but skip already solved cells
-                wb[y][x] = uniqueCheck(wb, y, x, cache=c)
+                wb[y][x] = _uniqueCheck(wb, y, x, cache=c)
                 if wb[y][x] > 0:
-                    c = generateCache(wb)       #regen cache if we hit an answer
+                    c = _generateCache(wb)       #regen cache if we hit an answer
                     changed = True              #if solved, raise the flag
 
         if checkComplete(wb):               #now check if it's finished
@@ -167,9 +167,9 @@ def checkConsistent(board):
             continue  
 
         temp = (  
-            getRowVals(board, y, x, inclusive=False) 
-            + getColVals(board, y, x, inclusive=False)
-            + getSqrVals(board, y, x, inclusive=False)
+            _getRowVals(board, y, x, inclusive=False) 
+            + _getColVals(board, y, x, inclusive=False)
+            + _getSqrVals(board, y, x, inclusive=False)
         )
         if board[y][x] in temp:
             return False
