@@ -3,9 +3,8 @@
 from .utils import rowGen, colGen, sqrGen, fullGen, getEmptyBoard, copyBoard
 
 
-# Return list of KNOWN values within a row/sqr/col.
 def _getRowVals(board, y, x, inclusive=True):
-    """Returns list of values of already set cells in row"""
+    """Returns list with the values of already set cells in row"""
     out = []
     for y1, x1 in rowGen(y, x, inclusive=inclusive):
         if board[y1][x1] == 0:
@@ -18,7 +17,7 @@ def _getRowVals(board, y, x, inclusive=True):
 
 
 def _getColVals(board, y, x, inclusive=True):
-    """Returns list of values of already set cells in col"""
+    """Returns list with the values of already set cells in col"""
     out = []
     for y1, x1 in colGen(y, x, inclusive=inclusive):
         if board[y1][x1] == 0:
@@ -31,7 +30,7 @@ def _getColVals(board, y, x, inclusive=True):
 
 
 def _getSqrVals(board, y, x, inclusive=True):
-    """Returns list of values of already set cells in sqr"""
+    """Returns list with the values of already set cells in sqr"""
     out = []
     for y1, x1 in sqrGen(y, x, inclusive=inclusive):
         if board[y1][x1] == 0:
@@ -59,7 +58,7 @@ def _getPoss(board, y, x):
 def _countZeros(board):
     """Returns count of zeros (eg carved cells) in a provided board.
 
-    Should work on stringify() board, and also full list board"""
+    Should work on board serialized with stringify(), and also full list board"""
 
     if type(board) == str:
         return board.count("0")
@@ -72,7 +71,10 @@ def _countZeros(board):
 
 
 def _generateCache(board):
-    """returns parallel cache board, holding set of possibilities for each cell"""
+    """Returns parallel cache board. Each cell in cache board holds the set of 
+    
+    possible values for that cell.
+    """
     out = getEmptyBoard()
     for y, x in fullGen():
         out[y][x] = _getPoss(board, y, x)
@@ -85,8 +87,8 @@ def _uniqueCheck(board, y, x, cache=None):
     Looks like this is 16x faster w cache provided. Also if we calc cache here, we're doing a lot of
     work to get possibilities for cells we won't access.
 
-    Works by getting the set of possible values
-    for the cell, then comparing with the possible values for every other cell in its row/col/sqr.
+    Works by getting the set of possible values for the cell, then comparing with the 
+    possible values for every other cell in its row/col/sqr.
     """
 
     # run cheap, naive checks first
@@ -114,6 +116,7 @@ def _uniqueCheck(board, y, x, cache=None):
 
 def solve(board, nest=0):
     """This is best-effort solve. Tries its best, but may return an incomplete or inconsistent
+
     board. If error, should have that cell as -1.
     """
     wb = copyBoard(board)  # pure function--dont change original board arg
@@ -121,42 +124,37 @@ def solve(board, nest=0):
     solved = False
     changed = True
 
-    while not solved and changed:  # iterate over board
+    while not solved and changed:
         changed = False
-        for y, x in fullGen():  # use uniqueCheck() against whole board
-            if wb[y][x] == 0:  # but skip already solved cells
+        for y, x in fullGen():
+            if wb[y][x] == 0:  # only check unsolved cells
                 wb[y][x] = _uniqueCheck(wb, y, x, cache=c)
                 if wb[y][x] > 0:
                     c = _generateCache(wb)  # regen cache if we hit an answer
-                    changed = True  # if solved, raise the flag
+                    changed = True
 
-        if checkComplete(wb):  # now check if it's finished
+        if checkComplete(wb):
             solved = True
 
-    # recurse clause (up to 3 times)
+    # if above checks don't solve puzzle, try to brute force
     if not solved and nest < 3:
-        lpy, lpx = 0, 0  # lynchpin cell coords. Find cell with most possibilities.
+        lpy, lpx = 0, 0  # get lynchpin, cell with most possibilities.
         for y, x in fullGen():
             if len(c[y][x]) > len(c[lpy][lpx]):
                 lpy, lpx = y, x
 
-        # now we check EACH possibility for lynchpin, to see if we get a solve
-        for value in c[lpy][lpx]:
-            testWB = copyBoard(
-                wb
-            )  # testWB is a branch--doesn't change orig state of wb
-            testWB[lpy][lpx] = value  # make assumption about lynchpin
-            testWB = solve(testWB, nest=nest + 1)  # try to solve
+        for value in c[lpy][lpx]:   # check each possible value for lynchpin cell
+            testWB = copyBoard(wb)
+            testWB[lpy][lpx] = value
+            testWB = solve(testWB, nest=nest + 1)  # control recursion with nest arg
 
             if checkComplete(testWB) and checkConsistent(testWB):
                 if not solved:
                     wb = testWB
                     solved = True
-                else:  # if board already solved, means multiple solutions
-                    print("Error: recursion uncovered multiple valid solutions")
-                    wb[0][0] = 0  # in case of multiple valid solutions, fail the board
+                else:  # board already solved means multiple valid solutions. Fail.
+                    wb[0][0] = 0
 
-    # output the now-solved (maybe incomplete) (and maybe inconsistent) board
     return wb
 
 
@@ -169,14 +167,15 @@ def checkComplete(board):
 
 
 def checkConsistent(board):
-    """Loop through board. If a cell matches another cell in its unit, its not consistent"""
-
-    # check for -1 first, this automatically means error
+    """True if consistent, else false. Works by checking whether a cell 
+    
+    matches another cell in its unit (row/column/square)
+    """
     if not checkConsistentCheap(board):
         return False
 
     for y, x in fullGen():
-        if board[y][x] == 0:  # ignore unset cells
+        if board[y][x] == 0:
             continue
 
         temp = (
@@ -191,6 +190,11 @@ def checkConsistent(board):
 
 
 def checkConsistentCheap(board):
+    """Return true if board is logically consistent, false otherwise.
+    
+    This is heuristic, simply checks if cell has -1 since this indicates 
+    and error
+    """
     for y, x in fullGen():
         if board[y][x] == -1:
             return False
@@ -198,4 +202,5 @@ def checkConsistentCheap(board):
 
 
 def check(board):
+    """Checks that board is both complete and consistent. Returns False if not."""
     return checkComplete(board) and checkConsistent(board)
