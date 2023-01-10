@@ -1,4 +1,4 @@
-# utilities for accessing and manipulating sudoku boards
+"""Utilities for accessing and manipulating sudoku boards """ 
 
 import random
 

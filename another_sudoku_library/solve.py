@@ -1,3 +1,5 @@
+"""Functions to solve a sudoku puzzle, and/or check correctness"""
+
 from .utils import rowGen, colGen, sqrGen, fullGen, getEmptyBoard, copyBoard
 
 

@@ -1,3 +1,5 @@
+"""Function to generate a new Sudoku puzzle"""
+
 import random
 from .utils import fullGen, exclusiveGen, getEmptyBoard, copyBoard
 from .solve import _generateCache, _uniqueCheck, checkComplete, checkConsistent, solve
