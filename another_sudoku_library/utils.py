@@ -4,6 +4,7 @@ import random
 
 
 def getEmptyBoard():
+    """Returns empty board, a 9x9 2D list structure. Empty cells are represented as zeros."""
     out = [
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -19,6 +20,7 @@ def getEmptyBoard():
 
 
 def printBoard(board, hidezeros=True):
+    """Pretty print a board to console"""
     for y, x in fullGen():
         # print every number
         if board[y][x] == 0 and hidezeros:
@@ -37,8 +39,7 @@ def printBoard(board, hidezeros=True):
 
 
 def copyBoard(board):
-    """Normally assigning a var to an existing board just copies the reference. this creates a
-    entire new copy. Use with getEmptyBoard() as the copy"""
+    """Deep copy--creates and returns copy as an entirely new board structure."""
     copy = getEmptyBoard()
     for y, x in fullGen():
         copy[y][x] = board[y][x]
@@ -46,7 +47,11 @@ def copyBoard(board):
 
 
 def getBitmap(board):
-    """has 1 for all given cells, 0 for undecided cells"""
+    """Returns board with 1 for all provided cells, 0 for undecided cells.
+
+    This is useful for implementing a UI, for instance to separately style provided cells,
+    or to prevent user from changing provided cells.
+    """
     out = getEmptyBoard()
     for y, x in fullGen():
         if board[y][x] != 0:
@@ -55,7 +60,7 @@ def getBitmap(board):
 
 
 def getOrigPermutation(board, bitmap):
-    """Returns original problem board, based on bitmap"""
+    """Returns original problem board based on bitmap"""
     out = getEmptyBoard()
     for y, x in fullGen():
         out[y][x] = board[y][x] * bitmap[y][x]
@@ -160,6 +165,7 @@ def normalize(board):
 
 
 def shuffle(board):
+    """Shuffle a normalized board to return a random permutation"""
     digits = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     out = copyBoard(board)
 
@@ -177,7 +183,7 @@ def shuffle(board):
 
 
 def stringify(board):
-    """Serializes board (a 2D list) into a flat string divided by semicolons"""
+    """Serializes board (a 2D list) into a flat string separated by semicolons"""
     outString = ""
     for y, x in fullGen():
         outString += str(board[y][x])
@@ -187,7 +193,7 @@ def stringify(board):
 
 
 def unstringify(boardString):
-    """reconstructs board (a 2D list) from a flat string"""
+    """Unserializes board (a 2D list) from a flat string"""
     out = getEmptyBoard()
     temp = boardString.split(";")
     for y, x in fullGen():
@@ -195,19 +201,30 @@ def unstringify(boardString):
     return out
 
 
-# generators to return coordinates of each cell in a row, column, or square. Replace nested loops.
 def rowGen(y, x, inclusive=True):
-    """Return generator that gives coord tuples (y,x) for this row"""
+    """Return generator that gives coord tuples (y,x) for the row of the argument coordinate.
+
+    By default, generator returns the argument coordinate. Set inclusive=False to exclude
+    the argument.
+    """
     return ((y, x1) for x1 in range(9) if (inclusive) or (x1 != x))
 
 
 def colGen(y, x, inclusive=True):
-    """Return generator that gives coord tuples (y,x) for the col"""
+    """Return generator that gives coord tuples (y,x) for the column of the argument coordinate.
+
+    By default, generator returns the argument coordinate. Set inclusive=False to exclude
+    the argument.
+    """
     return ((y1, x) for y1 in range(9) if (inclusive) or (y1 != y))
 
 
 def sqrGen(y, x, inclusive=True):
-    """Return generator that gives coord tuples (y,x) for the sqr"""
+    """Return generator that gives coord tuples (y,x) for the square of the argument coordinate.
+
+    By default, generator returns the argument coordinate. Set inclusive=False to exclude
+    the argument.
+    """
     cY = (y // 3) * 3  # calculate top-left corner of square, for
     cX = (x // 3) * 3  # the provided cell
     return (
@@ -224,11 +241,17 @@ def fullGen():
 
 
 def exclusiveGen():
+    """Returns generator that gives coord tuples (y,x) for whole board. Coords are
+
+    given in order to get maximum distance between consecutive tuples."""
     a = lambda x, y: ((x * 3 + x // 3 + y) % 9)
     return ((a(y1, x1), x1) for y1 in range(9) for x1 in range(9))
 
 
 def funnyGen():
+    """Returns generator that gives coord tuples (y,x) for whole board. Coords fill
+
+    out one square at a time."""
     xs = [0, 1, 2, 0, 1, 2, 0, 1, 2]
     ys = [0, 1, 2, 2, 0, 1, 1, 2, 0]
     for sqr in range(9):
