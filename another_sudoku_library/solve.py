@@ -182,3 +182,5 @@ def checkConsistentCheap(board):
             return False
     return True
 
+def check(board):
+    return checkComplete(board) and checkConsistent(board)
