@@ -16,7 +16,6 @@ test_requirements = ['pytest>=3', ]
 
 setup(
     author="jc400",
-    author_email=' ',
     python_requires='>=3.6',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
@@ -33,7 +32,7 @@ setup(
     license="MIT license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
-    keywords='another_sudoku_library',
+    keywords='sudoku',
     name='another_sudoku_library',
     packages=find_packages(include=['another_sudoku_library', 'another_sudoku_library.*']),
     test_suite='tests',
